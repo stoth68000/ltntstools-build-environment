@@ -24,6 +24,8 @@ LIBRDKAFKA_TAG=57c56c5f8f0b5d2bdb6e64af2683fc22beb6c434
 LIBOPENSSL_TAG=5810149e6566564a790bd6d3279159528015f915
 LIBJSONC_TAG=6c55f65d07a972dbd2d1668aab2e0056ccdd52fc
 LIBZVBI_TAG=e62d905e00cdd1d6d4333ead90fb5b44bfb49371
+LIBZVBI_BUILD_ARCH=
+LIBLTNTSTOOLS_DTAPI=
 [ -z "$BUILD_NTT" ] && BUILD_NTT=0
 
 if [ "$1" == "" ]; then
@@ -428,6 +430,11 @@ else
 	exit 1
 fi
 
+if [ "`uname -m`" == "aarch64" ]; then
+	LIBZVBI_BUILD_ARCH=--build=aarch64-unknown-linux-gnu
+	LIBLTNTSTOOLS_DTAPI=--enable-dtapi=no
+fi
+
 if [ "`uname -o`" == "Darwin" ]; then
 	BUILD_LIBOPENSSL=1
 	JOBS=16
@@ -619,9 +626,9 @@ fi
 pushd libzvbi
   if [ ! -f .skip ]; then
 	if [ "$BUILD_OPT_SHARED" == "no" ]; then
-		./configure --prefix=$PWD/../target-root/usr --enable-shared=no
+		./configure $LIBZVBI_BUILD_ARCH --prefix=$PWD/../target-root/usr --enable-shared=no
 	else
-		./configure --prefix=$PWD/../target-root/usr --enable-shared --disable-static
+		./configure $LIBZVBI_BUILD_ARCH --prefix=$PWD/../target-root/usr --enable-shared --disable-static
 	fi
 	make -j$JOBS
 	make install
@@ -778,10 +785,10 @@ pushd ltntstools
 	export LDFLAGS="-L$PWD/../target-root/usr/lib -L$PWD/../target-root/usr/lib64 $NIELSEN_LIB"
 	./autogen.sh --build
 	if [ "$BUILD_OPT_SHARED" == "no" ]; then
-		./configure --prefix=$PWD/../target-root/usr --enable-shared=no --enable-ntt=$ENABLE_NTT
+		./configure $LIBLTNTSTOOLS_DTAPI --prefix=$PWD/../target-root/usr --enable-shared=no --enable-ntt=$ENABLE_NTT
 	else
 		export PKG_CONFIG_PATH="$PWD/../target-root/usr/lib/pkgconfig:$PWD/../target-root/usr/lib64/pkgconfig"
-		./configure --prefix=$PWD/../target-root/usr --enable-shared --disable-static --enable-ntt=$ENABLE_NTT
+		./configure $LIBLTNTSTOOLS_DTAPI --prefix=$PWD/../target-root/usr --enable-shared --disable-static --enable-ntt=$ENABLE_NTT
 	fi
 	make -j$JOBS
 	make install
